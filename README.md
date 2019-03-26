@@ -5,5 +5,5 @@ Done as part of a class project.
 
 Still a work in progress.
 
-Quick and dirty example as of now:
+### Quick and dirty example as of now:
 ![example](https://github.com/mchlroy/tone-analyzer/blob/master/example.gif)
