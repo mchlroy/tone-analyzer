@@ -63,5 +63,5 @@ void AudioEngine::receiveAudioData(const std::vector<float> &data){
     AUDIOENGINE_DEBUG << "AudioEngine::receiveAudioData" << "size" << data.size();
 
     audioAnalyzerThread->calculateLevel(data);
-    audioAnalyzerThread->calculateSpectrum(data);
+    audioAnalyzerThread->calculateSpectrum(SAMPLE_RATE, data);
 }

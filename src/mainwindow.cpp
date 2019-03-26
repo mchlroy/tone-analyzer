@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(audioEngine->getAudioAnalyzerThread(), &AudioAnalyzerThread::levelChanged, ui->w_level, &LevelMeter::levelChanged);
     connect(audioEngine->getAudioAnalyzerThread(), &AudioAnalyzerThread::frequenciesChanged, ui->w_spectrum, &FrequencySpectrum::frequenciesChanged);
+    connect(audioEngine->getAudioAnalyzerThread(), &AudioAnalyzerThread::noteChanged, this, &MainWindow::noteChanged);
 
     selectDevice(0);
 
@@ -113,4 +114,9 @@ void MainWindow::waveFormChanged(const std::vector<float>& data, size_t numSampl
 
 //        splin
 //    }
+}
+
+
+void MainWindow::noteChanged(const QString note) {
+    ui->lbl_note->setText(note);
 }

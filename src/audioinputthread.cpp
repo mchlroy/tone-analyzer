@@ -70,11 +70,11 @@ void AudioInputThread::stopListening() {
 /************************************************************/
 void AudioInputThread::audioNotify()
 {
-
     // If we have gathered sampleRate / notifyInterval samples, emit data ready for analysis
     if (cbuffer.size() >= bufferLength) {
         // Converts the circular buffer of char to a vector of float (sample type)
         // TODO: Don't hardcode the type
+        AUDIOINPUT_DEBUG << "bufferLength" << bufferLength;
         emit dataReady(util::charToFloatVector(cbuffer, bufferLength));
 
         // Done with these data, free space
@@ -101,18 +101,11 @@ void AudioInputThread::audioStateChanged(QAudio::State state)
 /*
  * For my audio input device and format (44100, floats), this is called every 40 ms, meaning I get
  * 7056 samples each time (1000 / 40 * 7056 = 176400 bytes = 44100 * 4 bytes)
- * We process the data in audioNotify at notify_interval_ms in the same thread,
- * which take a bit more time and causes audioDataReady to be called later with more
- * samples ready which in turn causes a need for the buffer to be bigger.
- * TODO: see if this affects the datas and if using a different thread and biffer circular buffer would
- * be a good idea
  */
 void AudioInputThread::audioDataReady()
 {
-    Q_ASSERT(bufferPosition < tempBuffer.size());
-
     size_t bytesReady = static_cast<size_t>(audioInput->bytesReady());
-    size_t bytesToBeRead = std::min(bytesReady, tempBuffer.size() - bufferPosition);
+    size_t bytesToBeRead = std::min(bytesReady, tempBuffer.size());
 
     const long long bytesRead = audioInputIODevice->read(reinterpret_cast<char*>(tempBuffer.data()), static_cast<long long>(bytesToBeRead));
     cbuffer.insert(cbuffer.end(), tempBuffer.begin(), tempBuffer.begin() + bytesRead);

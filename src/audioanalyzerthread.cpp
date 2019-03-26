@@ -42,8 +42,8 @@ void AudioAnalyzerThread::calculateLevel(const std::vector<float> &data) {
     emit levelChanged(rmsLevel, peakLevel, numSamples);
 }
 
-void AudioAnalyzerThread::calculateSpectrum(const std::vector<float> &data) {
-    //AUDIOANALYZER_DEBUG << "AudioInput::calculateSpectrum" << "size" << data.size();
+void AudioAnalyzerThread::calculateSpectrum(const int sampleRate, const std::vector<float> &data) {
+    AUDIOANALYZER_DEBUG << "AudioInput::calculateSpectrum" << "size" << data.size();
 
     if (!plan_initialized) {
         fftw_in.resize(data.size());
@@ -56,6 +56,21 @@ void AudioAnalyzerThread::calculateSpectrum(const std::vector<float> &data) {
     std::transform(data.begin(), data.end(), fftw_in.begin(), [](float x) -> double { return double(x); });
     fftw_execute(fftw_plan);
 
+    double hz_step = sampleRate / 2.0 / data.size() / 2.0;
+    double max_freq = std::numeric_limits<double>::min();
+    int index = 0;
+    for (int i = 0; i < NB_NOTES; i++) {
+        size_t ffw_out_index = static_cast<size_t>(frequencies[i] / hz_step);
+        double v1 = std::sqrt(std::pow(fftw_out[ffw_out_index].real(), 2) + std::pow(fftw_out[ffw_out_index].imag(), 2));
+        double v2 = std::sqrt(std::pow(fftw_out[ffw_out_index+1].real(), 2) + std::pow(fftw_out[ffw_out_index+1].imag(), 2));
+        double value = (v1 + v2) / 2.0;
+        if (max_freq < value) {
+            index = i;
+            max_freq = value;
+        }
+    }
+
     // We only need half, the rest is not useful by the nature of Discrete Fourier Transform / Fast Fourier Transform
     emit frequenciesChanged(fftw_out.data(), data.size() / 2);
+    emit noteChanged(notes[index]);
 }
