@@ -17,7 +17,7 @@ FrequencySpectrum::FrequencySpectrum(QWidget *parent)
 
 }
 
-void FrequencySpectrum::frequenciesChanged(const std::complex<double>* frequencies, const size_t numSamples)
+void FrequencySpectrum::frequenciesChanged(const double* frequencies, const size_t numSamples)
 {
     this->frequencies = frequencies;
     this->numSamples = numSamples;
@@ -58,18 +58,17 @@ void FrequencySpectrum::paintEvent(QPaintEvent *event)
     int currentX = 0;
     double avg = 0;
     for (int i = 0; i < static_cast<int>(numSamples); i++) {
-        double valAbs = std::sqrt(std::pow(frequencies[i].real(), 2) + std::pow(frequencies[i].imag(), 2));
-        maxPower = std::max(maxPower, valAbs);
+        maxPower = std::max(maxPower, frequencies[i]);
 
         // We have more samples than pixels wide, so we average samplesPerX samples per x coord
         if (static_cast<int>(i / samplesPerX) == currentX) {
-            avg += valAbs;
+            avg += frequencies[i];
         }
         else {
             avg = avg / samplesPerX;
             currentX++;
 
-            QPoint currentPoint = QPoint(i, maxHeight - static_cast<int>(valAbs / maxPower * maxHeight));
+            QPoint currentPoint = QPoint(i, maxHeight - static_cast<int>(frequencies[i] / maxPower * maxHeight));
             painter.drawLine(lastPoint, currentPoint);
             lastPoint = currentPoint;
             currentX++;

@@ -21,7 +21,7 @@ public:
 
 public slots:
     void reset();
-    void frequenciesChanged(const std::complex<double>* frequencies, const size_t numSamples);
+    void frequenciesChanged(const double* frequencies, const size_t numSamples);
 
 private slots:
     void redrawTimerExpired();
@@ -32,7 +32,7 @@ private:
      * This is calculated by decaying m_peakLevel depending on the
      * elapsed time since m_peakLevelChanged, and the value of m_decayRate.
      */
-    const std::complex<double>* frequencies;
+    const double* frequencies;
 
     size_t numSamples;
 

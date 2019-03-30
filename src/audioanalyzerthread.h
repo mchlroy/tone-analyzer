@@ -17,8 +17,7 @@ public:
     ~AudioAnalyzerThread();
 
     enum { NB_NOTES = 108 };
-
-    QString notes[NB_NOTES] = {
+    const QString notes[NB_NOTES] = {
         "C0",
         "C#0/Db0",
         "D0",
@@ -129,7 +128,7 @@ public:
         "B8"
     };
 
-    double frequencies[NB_NOTES] = {
+    const double frequencies[NB_NOTES] = {
         16.35,
         17.32,
         18.35,
@@ -244,13 +243,14 @@ private:
     // The thread it will be running on
     QThread* thread;
 
-    boost::circular_buffer<int>         cbuffer;
-
     std::vector<double>                 fftw_in;
     std::vector<std::complex<double>>   fftw_out;
     fftw_plan                           fftw_plan;
 
+    std::vector<double>                 data_out;
     bool                                plan_initialized;
+
+    void applyWindowingFunction();
 public slots:
     /**
      * ** Some code taken/inspired from Qt example "Spectrum" **
@@ -278,7 +278,7 @@ signals:
      * @param frequencies The frequencies and their value
      * @param numSamples Number of audio samples analyzed
      */
-    void frequenciesChanged(const std::complex<double>* frequencies, size_t numSamples);
+    void frequenciesChanged(const double* frequencies, size_t numSamples);
 
     /**
      * @brief Signal for when the note is updated

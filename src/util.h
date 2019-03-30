@@ -53,7 +53,10 @@ namespace util {
      * @return The size the buffer should have
      */
     size_t bufferLength(const QAudioFormat &format, const int interval);
+    std::vector<float> charToFloatVector(const std::vector<char>& data, size_t size);
     std::vector<float> charToFloatVector(const boost::circular_buffer<char>& data, size_t size);
+    std::vector<float> charToFloatVector(const boost::circular_buffer<char>& data, size_t start, size_t size);
+    std::vector<char> overlap(std::vector<char> first_half, const boost::circular_buffer<char>& rest,  size_t size);
 }
 
 #endif // UTIL_H

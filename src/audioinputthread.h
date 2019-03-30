@@ -48,7 +48,7 @@ private:
     QAudioDeviceInfo                audioInputDevice;   // Currently selected audio input device
     QAudioInput*                    audioInput;         // Interface for receiving audio data
     QIODevice*                      audioInputIODevice; // Interface receiving audio data (returned by audioInput->start())
-
+    std::vector<char>               first_half;
 private:
     /**
      * @brief Initializes the audio input device for listening

@@ -10,6 +10,7 @@ AudioInputThread::AudioInputThread(int notifyIntervalMs)
     ,   numBytesRead{0}
     ,   tempBuffer(0)
     ,   cbuffer(0)
+    ,   first_half{}
 {
     moveToThread(thread);
     thread->start();
@@ -40,6 +41,8 @@ bool AudioInputThread::initialize() {
     bufferLength = util::bufferLength(format, notifyIntervalMs);
     tempBuffer.resize(bufferLength);
     cbuffer.set_capacity(bufferLength * 2);
+    first_half.resize(bufferLength / 2);
+    std::fill(first_half.begin(), first_half.end(), 0);
 
     AUDIOINPUT_DEBUG_S << "AudioInputThread::initialize" << "bufferLength" << bufferLength;
 
@@ -74,10 +77,14 @@ void AudioInputThread::audioNotify()
     if (cbuffer.size() >= bufferLength) {
         // Converts the circular buffer of char to a vector of float (sample type)
         // TODO: Don't hardcode the type
-        AUDIOINPUT_DEBUG << "bufferLength" << bufferLength;
-        emit dataReady(util::charToFloatVector(cbuffer, bufferLength));
+        AUDIOINPUT_DEBUG << "bufferLength" << bufferLength << "cbuffer.size()" << cbuffer.size();
 
-        // Done with these data, free space
+        std::vector<char> data = util::overlap(first_half, cbuffer, bufferLength);
+        emit dataReady(util::charToFloatVector(data, bufferLength));
+
+        // Keep last half of current set of samples
+        std::copy(cbuffer.begin() + bufferLength / 2, cbuffer.begin() + static_cast<int>(bufferLength), first_half.begin());
+
         cbuffer.erase(cbuffer.begin(), cbuffer.begin() + static_cast<int>(bufferLength));
     }
 }
@@ -109,4 +116,5 @@ void AudioInputThread::audioDataReady()
 
     const long long bytesRead = audioInputIODevice->read(reinterpret_cast<char*>(tempBuffer.data()), static_cast<long long>(bytesToBeRead));
     cbuffer.insert(cbuffer.end(), tempBuffer.begin(), tempBuffer.begin() + bytesRead);
+    AUDIOINPUT_DEBUG << "bytesRead" << bytesRead;
 }

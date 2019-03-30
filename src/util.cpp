@@ -1,7 +1,7 @@
 #include "util.h"
 
 #include <cstring>
-
+#include <QDebug>
 namespace util {
     size_t bufferLength(const QAudioFormat &format, const int interval)
     {
@@ -21,11 +21,38 @@ namespace util {
         return static_cast<size_t>((format.sampleRate() * format.channelCount() * (format.sampleSize() / 8)) / (1000 / interval));
     }
 
+    std::vector<float> charToFloatVector(const std::vector<char>& data, size_t size)
+    {
+        Q_ASSERT(data.size() >= size && size % 4 == 0);
+        std::vector<float> floats(size / sizeof(float));
+        std::memcpy(floats.data(), &*data.begin(), size);
+        return floats;
+    }
+
     std::vector<float> charToFloatVector(const boost::circular_buffer<char>& data, size_t size)
     {
         Q_ASSERT(data.size() >= size && size % 4 == 0);
         std::vector<float> floats(size / sizeof(float));
         std::memcpy(floats.data(), &*data.begin(), size);
         return floats;
+    }
+
+    std::vector<float> charToFloatVector(const boost::circular_buffer<char>& data, size_t start, size_t size)
+    {
+        Q_ASSERT(data.size() >= size && size % 4 == 0);
+        std::vector<float> floats(size / sizeof(float));
+        std::memcpy(floats.data(), &*(data.begin() + static_cast<int>(start)), size);
+        return floats;
+    }
+
+    std::vector<char> overlap(std::vector<char> first_half, const boost::circular_buffer<char>& rest, size_t size)
+    {
+        Q_ASSERT(rest.size() >= size / 2);
+        Q_ASSERT(first_half.size() == size / 2);
+
+        std::vector<char> overlapped(size);
+        std::memcpy(overlapped.data(), first_half.data(), size / 2);
+        std::memcpy(overlapped.data() + (size / 2), &*rest.begin(), size / 2);
+        return overlapped;
     }
 }
