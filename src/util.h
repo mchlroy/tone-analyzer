@@ -22,6 +22,13 @@ inline NullDebug nullDebug() { return NullDebug(); }
 #   define AUDIOENGINE_DEBUG nullDebug()
 #endif
 
+// Audio engine debug messages (silly)
+#ifdef LOG_AUDIOENGINE_S
+#   define AUDIOENGINE_DEBUG_S qDebug()
+#else
+#   define AUDIOENGINE_DEBUG_S nullDebug()
+#endif
+
 // Audio analyzer debug messages
 #ifdef LOG_AUDIOANALYZER
 #   define AUDIOANALYZER_DEBUG qDebug()

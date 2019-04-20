@@ -5,8 +5,8 @@
 #include "util.h"
 
 AudioInputThread::AudioInputThread(int notifyIntervalMs)
-    :   notifyIntervalMs{notifyIntervalMs}
-    ,   thread{new QThread}
+    :   thread{new QThread}
+    ,   notifyIntervalMs{notifyIntervalMs}
     ,   numBytesRead{0}
     ,   tempBuffer(0)
     ,   cbuffer(0)
@@ -76,22 +76,23 @@ void AudioInputThread::audioNotify()
     // If we have gathered sampleRate / notifyInterval samples, emit data ready for analysis
     if (cbuffer.size() >= bufferLength) {
         // Converts the circular buffer of char to a vector of float (sample type)
-        // TODO: Don't hardcode the type
-        AUDIOINPUT_DEBUG << "bufferLength" << bufferLength << "cbuffer.size()" << cbuffer.size();
+        // TODO: Don't hardcode the type, do it based on audio format
+        AUDIOINPUT_DEBUG_S << "bufferLength" << bufferLength << "cbuffer.size()" << cbuffer.size();
 
         std::vector<char> data = util::overlap(first_half, cbuffer, bufferLength);
         emit dataReady(util::charToFloatVector(data, bufferLength));
 
-        // Keep last half of current set of samples
+        // Keep last half of current set of samples which will become first half of next set of samples
         std::copy(cbuffer.begin() + bufferLength / 2, cbuffer.begin() + static_cast<int>(bufferLength), first_half.begin());
 
+        // Changes the position of begin()
         cbuffer.erase(cbuffer.begin(), cbuffer.begin() + static_cast<int>(bufferLength));
     }
 }
 
 void AudioInputThread::audioStateChanged(QAudio::State state)
 {
-   // AUDIOINPUT_DEBUG << "Engine::audioStateChanged" << "state" << state;
+    AUDIOINPUT_DEBUG_S << "Engine::audioStateChanged" << "state" << state;
 
     if (QAudio::StoppedState == state) {
         // Check error
@@ -99,7 +100,7 @@ void AudioInputThread::audioStateChanged(QAudio::State state)
         error = audioInput->error();
         if (error != QAudio::NoError) {
             stopListening();
-        //    AUDIOINPUT_DEBUG << "AudioInputThread::audioStateChanged" << "Error" << error;
+            AUDIOINPUT_DEBUG << "AudioInputThread::audioStateChanged" << "Error" << error;
             return;
         }
     }

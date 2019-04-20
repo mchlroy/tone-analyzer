@@ -8,6 +8,7 @@
 #include <boost/circular_buffer.hpp>
 
 #include "util.h"
+#include <notes.h>
 
 AudioAnalyzerThread::AudioAnalyzerThread()
     : thread(new QThread(this))
@@ -52,32 +53,14 @@ void AudioAnalyzerThread::applyWindowingFunction() {
     }
 }
 
-void AudioAnalyzerThread::calculateSpectrum(const int sampleRate, const std::vector<float> &data) {
-    if (!plan_initialized) {
-        fftw_in.resize(data.size());
-        fftw_out.resize(data.size());
-        data_out.resize(data.size());
-        fftw_plan = fftw_plan_dft_r2c_1d(static_cast<int>(fftw_in.size()), fftw_in.data(), reinterpret_cast<fftw_complex*>(fftw_out.data()), FFTW_BACKWARD);
-        plan_initialized = true;
-    }
-
-    std::transform(data.begin(), data.end(), fftw_in.begin(), [](float x) -> double { return double(x); });
-    fftw_execute(fftw_plan);
-
-    applyWindowingFunction();
-
-    // Transform complex numbers to floating point numbers
-    std::transform(fftw_out.begin(), fftw_out.end(), data_out.begin(), [](std::complex<double> x) -> double {
-        return std::sqrt(std::pow(x.real(), 2) + std::pow(x.imag(), 2));
-    });
-
+void AudioAnalyzerThread::calculateNote(const int sampleRate) {
     // Crude detection of pitch, just take frequency with highest value
-    // TODO: Detection of harmonics
-    double hz_step = sampleRate / 2.0 / data.size() / 2.0;
+    // TODO: Detection of fundamental harmonics
+    double hz_step = sampleRate / 2.0 / data_out.size() / 2.0;
     double max_freq = std::numeric_limits<double>::min();
     int index = 0;
-    for (int i = 0; i < NB_NOTES; i++) {
-        size_t fftw_out_index = static_cast<size_t>(frequencies[i] / hz_step);
+    for (int i = 0; i < notes::NB_NOTES; i++) {
+        size_t fftw_out_index = static_cast<size_t>(notes::frequencies[i] / hz_step);
         double v1 = data_out[fftw_out_index];
         double v2 = data_out[fftw_out_index + 1];
         double value = (v1 + v2) / 2.0;
@@ -87,7 +70,30 @@ void AudioAnalyzerThread::calculateSpectrum(const int sampleRate, const std::vec
         }
     }
 
+    emit noteChanged(notes::notes[index]);
+}
+
+void AudioAnalyzerThread::calculateSpectrum(const int sampleRate, const std::vector<float> &data) {
+    if (!plan_initialized) {
+        fftw_in.resize(data.size());
+        fftw_out.resize(data.size());
+        data_out.resize(data.size());
+        fftw_plan = fftw_plan_dft_r2c_1d(static_cast<int>(fftw_in.size()), fftw_in.data(), reinterpret_cast<fftw_complex*>(fftw_out.data()), FFTW_BACKWARD);
+        plan_initialized = true;
+    }
+
+    // TODO: Correctly implement windowing function, right now it messes up the data
+    // applyWindowingFunction();
+
+    std::transform(data.begin(), data.end(), fftw_in.begin(), [](float x) -> double { return double(x); });
+    fftw_execute(fftw_plan);
+
+    // Transform complex numbers to floating point numbers
+    std::transform(fftw_out.begin(), fftw_out.end(), data_out.begin(), [](std::complex<double> x) -> double {
+        return std::sqrt(std::pow(x.real(), 2) + std::pow(x.imag(), 2));
+    });
+
     // We only need half, the rest is not useful by the nature of Discrete Fourier Transform / Fast Fourier Transform
     emit frequenciesChanged(data_out.data(), data_out.size());
-    emit noteChanged(notes[index]);
+    calculateNote(sampleRate);
 }

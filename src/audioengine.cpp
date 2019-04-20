@@ -23,6 +23,7 @@ AudioEngine::AudioEngine()
         }
     });
 
+    // Connects with the audioInputThread
     connect(audioInputThread, &AudioInputThread::dataReady, this, &AudioEngine::receiveAudioData);
 }
 
@@ -60,7 +61,7 @@ void AudioEngine::stopListening() {
 }
 
 void AudioEngine::receiveAudioData(const std::vector<float> &data){
-    //AUDIOENGINE_DEBUG << "AudioEngine::receiveAudioData" << "size" << data.size();
+    AUDIOENGINE_DEBUG_S << "AudioEngine::receiveAudioData" << "size" << data.size();
 
     audioAnalyzerThread->calculateLevel(data);
     audioAnalyzerThread->calculateSpectrum(SAMPLE_RATE, data);

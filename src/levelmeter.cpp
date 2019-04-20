@@ -5,17 +5,17 @@
 #include <QPainter>
 #include <QTimer>
 
-// Constants
-const int RedrawInterval = 100;         // ms
-const float PeakDecayRate = 0.001f;
-const int PeakHoldLevelDuration = 2000; // ms
+// Constants (sorry Patrice)
+const int REDRAW_INTERVAL = 100;         // ms
+const float PEAK_DECAY_RATE = 0.001f;
+const int PEAK_HOLD_LEVEL_DURATION = 2000; // ms
 
 LevelMeter::LevelMeter(QWidget *parent)
     :   QWidget(parent)
     ,   rmsLevel(0.0)
     ,   peakLevel(0.0)
     ,   decayedPeakLevel(0.0)
-    ,   peakDecayRate(PeakDecayRate)
+    ,   peakDecayRate(PEAK_DECAY_RATE)
     ,   peakHoldLevel(0.0)
     ,   redrawTimer(new QTimer(this))
     ,   rmsColor(Qt::red)
@@ -25,7 +25,7 @@ LevelMeter::LevelMeter(QWidget *parent)
     setMinimumWidth(30);
 
     connect(redrawTimer, &QTimer::timeout, this, &LevelMeter::redrawTimerExpired);
-    redrawTimer->start(RedrawInterval);
+    redrawTimer->start(REDRAW_INTERVAL);
 }
 
 LevelMeter::~LevelMeter() {}
@@ -61,14 +61,14 @@ void LevelMeter::redrawTimerExpired()
 {
     // Decay the peak signal
     const int elapsedMs = peakLevelChanged.elapsed();
-    const float decayAmount = peakDecayRate * elapsedMs;
+    const float decayAmount = PEAK_DECAY_RATE * elapsedMs;
     if (decayAmount < peakLevel)
         decayedPeakLevel = peakLevel - decayAmount;
     else
         decayedPeakLevel = 0.0;
 
     // Check whether to clear the peak hold level
-    if (peakHoldLevelChanged.elapsed() > PeakHoldLevelDuration)
+    if (peakHoldLevelChanged.elapsed() > PEAK_HOLD_LEVEL_DURATION)
         peakHoldLevel = 0.0;
 
     update();

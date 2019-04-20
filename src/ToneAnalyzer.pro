@@ -43,7 +43,8 @@ HEADERS += \
     audioanalyzerthread.h \
     audioengine.h \
     audioinputthread.h \
-    util.h
+    util.h \
+    notes.h
 
 FORMS += \
         mainwindow.ui
